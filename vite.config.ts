@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'node:path'
 
-import siteConfiguration from './.figma/make/site.json' with { type: 'json' }
+import siteConfiguration from './.figma/make/site.json'
 
 // Vite config — https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -15,21 +15,6 @@ export default defineConfig(({ mode }) => {
     build: {
       sourcemap: emitSourcemaps ? 'inline' : false,
       minify: !emitSourcemaps,
-      rollupOptions: {
-        output: {
-          manualChunks(id) {
-            if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
-              return 'react-vendor'
-            }
-            if (id.includes('node_modules/recharts')) {
-              return 'recharts-vendor'
-            }
-            if (id.includes('node_modules/lucide-react')) {
-              return 'icons-vendor'
-            }
-          },
-        },
-      },
     },
     plugins: [
       react(),
@@ -41,7 +26,7 @@ export default defineConfig(({ mode }) => {
     ],
     resolve: {
       alias: {
-        '@': path.resolve(import.meta.dirname || '.', './src'),
+        '@': path.resolve(__dirname, './src'),
       },
     },
     server: {

@@ -1,344 +1,377 @@
-import { useState } from 'react';
-import { CheckCircle, Loader, Zap, ArrowDown, Train, Users, Clock } from 'lucide-react';
+import React, { useState } from 'react';
+import {
+  CheckCircle,
+  Loader,
+  Zap,
+  Train,
+  Users,
+  Clock,
+  AlertTriangle,
+  RotateCcw,
+  Sparkles,
+  ShieldCheck,
+  AlertCircle,
+} from 'lucide-react';
+import { useApp } from '../context/AppContext';
 import type { Screen } from '../types';
 
 const NAVY = '#123B66';
+const DEEP = '#0B2545';
 const SAFFRON = '#F28C28';
 const GREEN = '#138A4B';
 const BLUE = '#1769AA';
 
-interface Props {
-  setScreen: (s: Screen) => void;
-  approvedBlocks: Set<string>;
-  onApprove: () => void;
-}
-
 const pipelineSteps = [
-  { label: 'Maintenance Requests', sub: '6 requests ingested', status: 'done' },
-  { label: 'Priority Analysis', sub: 'Severity × overdue × asset criticality', status: 'done' },
-  { label: 'Conflict Detection', sub: '2 scheduling conflicts resolved', status: 'done' },
-  { label: 'Task Coordination', sub: 'Cross-department grouping', status: 'done' },
-  { label: 'Train Impact Analysis', sub: 'Schedule cross-check complete', status: 'done' },
-  { label: 'Block Optimization', sub: 'Windows evaluated for minimum disruption', status: 'done' },
-  { label: 'Recommended Plan', sub: 'Ready for Planner review', status: 'active' },
+  { label: 'Ingesting Requisitions', sub: 'Aggregating active department queues' },
+  { label: 'Priority & Risk Weighting', sub: 'Asset criticality × overdue days' },
+  { label: 'Section Spatial Alignment', sub: 'Corridor grouping along A–B segment' },
+  { label: 'Conflict Detection Matrix', sub: 'Cross-checking train schedules & power feeds' },
+  { label: 'Train Flow Impact Analysis', sub: 'Timetable simulation to minimize delay' },
+  { label: 'Multi-Department Coordination', sub: 'Bundling Track, Signal & OHE requirements' },
+  { label: 'Window Optimization Engine', sub: 'Slotting optimal 150-minute night window' },
+  { label: 'Advisory Plan Synthesis', sub: 'Score calculation & decision recommendation' },
 ];
 
-const priorityTasks = [
-  {
-    id: 'BR-1024',
-    dept: 'Engineering',
-    activity: 'Track Repair — Rail Fracture',
-    section: 'A–B',
-    priority: 'Critical' as const,
-    notes: 'Overdue 3 days. Derailment risk.',
-    color: '#DC2626',
-    deptColor: BLUE,
-  },
-  {
-    id: 'BR-1025',
-    dept: 'Signal & Telecom',
-    activity: 'Signal Inspection & Testing',
-    section: 'A–B',
-    priority: 'High' as const,
-    notes: 'Intermittent relay failure.',
-    color: '#EA580C',
-    deptColor: '#C2410C',
-  },
-  {
-    id: 'BR-1026',
-    dept: 'Traction',
-    activity: 'OHE Inspection',
-    section: 'A–B',
-    priority: 'High' as const,
-    notes: 'Inspection overdue 7 days.',
-    color: '#EA580C',
-    deptColor: '#166534',
-  },
+const alternativeSlots = [
+  { label: '17 Sep 2026', time: '21:30–00:00', impact: 'Medium', trains: 5, note: 'Rajdhani Express affected' },
+  { label: '18 Sep 2026', time: '22:00–00:30', impact: 'Low', trains: 2, note: 'AI Recommended ★ (Optimal)' },
+  { label: '19 Sep 2026', time: '23:00–01:30', impact: 'Low', trains: 3, note: 'Viable secondary alternative' },
+  { label: '20 Sep 2026', time: '22:30–01:00', impact: 'Medium', trains: 4, note: 'Safety margin degraded' },
 ];
 
-export default function AIPlanning({ setScreen, approvedBlocks, onApprove }: Props) {
+export default function AIPlanning() {
+  const {
+    setScreen,
+    blocks,
+    approvedBlocks,
+    recommendationState,
+    analysisStep,
+    isAnalyzing,
+    generateOptimizedPlan,
+    conflicts,
+    setSelectedConflict,
+    setIsBlockModifyOpen,
+    setSelectedBlockId,
+  } = useApp();
+
   const [viewAlts, setViewAlts] = useState(false);
-  const b014Approved = approvedBlocks.has('B014');
 
-  const alternativeSlots = [
-    { label: '17 Sep 2026', time: '21:30–00:00', impact: 'Medium', trains: 5, note: 'Rajdhani Express affected' },
-    { label: '18 Sep 2026', time: '22:00–00:30', impact: 'Low', trains: 2, note: 'AI Recommended ★' },
-    { label: '19 Sep 2026', time: '23:00–01:30', impact: 'Low', trains: 3, note: 'Viable alternative' },
-    { label: '20 Sep 2026', time: '22:30–01:00', impact: 'Medium', trains: 4, note: 'Maintenance further delayed' },
-  ];
+  const b014 = blocks.find((b) => b.id === 'B014');
+  const b014Approved = approvedBlocks.has('B014') || b014?.status === 'approved';
+  const b014Rejected = b014?.status === 'rejected';
 
   return (
-    <div className="p-6 max-w-[1200px] space-y-6">
-      <div>
-        <h1 className="text-xl font-bold" style={{ color: NAVY }}>
-          AI Planning
-        </h1>
-        <p className="text-sm text-slate-500 mt-0.5">
-          AI analyses requests, detects conflicts, and recommends an optimized maintenance block plan
-        </p>
+    <div className="p-3.5 sm:p-6 max-w-[1300px] space-y-4 sm:space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between flex-wrap gap-3 sm:gap-4">
+        <div>
+          <h1 className="text-lg sm:text-xl font-bold" style={{ color: NAVY }}>
+            AI Maintenance Block Planning
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5 leading-snug">
+            Decision-support intelligence: Corridor optimization, conflict resolution, and joint block synthesis
+          </p>
+        </div>
+
+        <button
+          onClick={generateOptimizedPlan}
+          disabled={isAnalyzing}
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold text-white shadow-sm hover:opacity-95 transition-all disabled:opacity-60 cursor-pointer min-h-[44px]"
+          style={{ background: `linear-gradient(135deg, ${DEEP}, ${BLUE})` }}
+        >
+          {isAnalyzing ? (
+            <>
+              <Loader size={15} className="animate-spin text-amber-300" />
+              <span>Analyzing Corridor…</span>
+            </>
+          ) : (
+            <>
+              <Sparkles size={15} className="text-amber-300" />
+              <span>GENERATE OPTIMIZED PLAN</span>
+            </>
+          )}
+        </button>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        {/* Pipeline */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-          <h3 className="font-semibold text-sm mb-4" style={{ color: NAVY }}>
-            Planning Pipeline
-          </h3>
-          <div className="space-y-0">
-            {pipelineSteps.map((step, i) => (
-              <div key={step.label} className="flex gap-3">
-                <div className="flex flex-col items-center">
-                  <div
-                    className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 z-10"
-                    style={{
-                      background:
-                        step.status === 'done' ? GREEN : step.status === 'active' ? SAFFRON : '#E2E8F0',
-                    }}
-                  >
-                    {step.status === 'done' ? (
-                      <CheckCircle size={14} className="text-white" />
-                    ) : step.status === 'active' ? (
-                      <Zap size={13} className="text-white" />
-                    ) : (
-                      <Loader size={13} className="text-slate-400" />
-                    )}
-                  </div>
-                  {i < pipelineSteps.length - 1 && (
-                    <div
-                      className="w-0.5 flex-1 my-1"
-                      style={{ background: step.status === 'done' ? GREEN + '60' : '#E2E8F0' }}
-                    />
-                  )}
-                </div>
-                <div className="pb-4">
-                  <p
-                    className="text-sm font-semibold"
-                    style={{ color: step.status === 'active' ? SAFFRON : step.status === 'done' ? NAVY : '#94A3B8' }}
-                  >
-                    {step.label}
-                  </p>
-                  <p className="text-xs text-slate-400 mt-0.5">{step.sub}</p>
-                </div>
-              </div>
-            ))}
+        {/* Left Column: Planning Pipeline */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+            <h3 className="font-bold text-sm text-slate-800" style={{ color: NAVY }}>
+              Optimization Pipeline
+            </h3>
+            <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+              Deterministic Engine
+            </span>
           </div>
 
-          <div className="mt-2 rounded-lg p-3 flex items-center gap-2" style={{ background: GREEN + '15' }}>
-            <CheckCircle size={14} style={{ color: GREEN }} />
-            <span className="text-sm font-semibold" style={{ color: GREEN }}>
-              AI Planning Complete
-            </span>
+          <div className="space-y-0">
+            {pipelineSteps.map((step, i) => {
+              const isDone = !isAnalyzing || analysisStep > i;
+              const isActive = isAnalyzing && analysisStep === i;
+
+              return (
+                <div key={step.label} className="flex gap-3">
+                  <div className="flex flex-col items-center">
+                    <div
+                      className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 z-10 transition-colors duration-300"
+                      style={{
+                        background: isDone ? GREEN : isActive ? SAFFRON : '#E2E8F0',
+                      }}
+                    >
+                      {isDone ? (
+                        <CheckCircle size={14} className="text-white" />
+                      ) : isActive ? (
+                        <Zap size={13} className="text-white animate-pulse" />
+                      ) : (
+                        <div className="w-2 h-2 rounded-full bg-slate-400" />
+                      )}
+                    </div>
+                    {i < pipelineSteps.length - 1 && (
+                      <div
+                        className="w-0.5 flex-1 my-0.5 transition-colors duration-300"
+                        style={{ background: isDone ? GREEN + '60' : '#E2E8F0', minHeight: '22px' }}
+                      />
+                    )}
+                  </div>
+                  <div className="pb-3.5 min-w-0">
+                    <p
+                      className={`text-xs font-bold leading-tight ${
+                        isActive ? 'text-amber-600' : isDone ? 'text-slate-800' : 'text-slate-400'
+                      }`}
+                    >
+                      {step.label}
+                    </p>
+                    <p className="text-[11px] text-slate-400 mt-0.5 leading-snug">{step.sub}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="pt-2 border-t border-slate-100">
+            <div className="rounded-xl p-3 flex items-center gap-2.5 bg-emerald-50 border border-emerald-200">
+              <CheckCircle size={16} className="text-emerald-600 flex-shrink-0" />
+              <div>
+                <p className="text-xs font-bold text-emerald-800">
+                  {isAnalyzing ? 'Processing Corridor Telemetry…' : 'AI Optimization Complete'}
+                </p>
+                <p className="text-[10px] text-emerald-700">
+                  {isAnalyzing ? 'Simulating train slots' : 'Ready for Planner authorization'}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Results */}
-        <div className="xl:col-span-2 space-y-4">
-          {/* Top Priority Tasks */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-            <h3 className="font-semibold text-sm mb-4" style={{ color: NAVY }}>
-              Top Priority Tasks
-            </h3>
-            <div className="space-y-3">
-              {priorityTasks.map((task, idx) => (
+        {/* Right Column: AI Results & Recommendation Card */}
+        <div className="xl:col-span-2 space-y-5">
+          {/* Active Detected Conflicts Card */}
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5 space-y-3">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <AlertTriangle size={16} className="text-amber-600" />
+                <h3 className="font-bold text-sm" style={{ color: NAVY }}>
+                  Corridor Conflict Detection & Resolution
+                </h3>
+              </div>
+              <span className="text-xs text-slate-400 font-medium">Click any conflict to inspect mitigation</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              {conflicts.map((c) => (
                 <div
-                  key={task.id}
-                  className="rounded-lg border p-3 flex items-center gap-4"
-                  style={{ borderColor: task.color + '40', background: task.color + '05' }}
+                  key={c.id}
+                  onClick={() => setSelectedConflict(c)}
+                  className="p-3 rounded-xl border border-slate-200 hover:border-blue-400 hover:shadow-xs bg-slate-50 hover:bg-white cursor-pointer transition-all space-y-1.5"
                 >
-                  <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
-                    style={{ background: task.color }}
-                  >
-                    {idx + 1}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span
-                        className="text-xs font-bold px-2 py-0.5 rounded-full"
-                        style={{ background: task.deptColor + '15', color: task.deptColor }}
-                      >
-                        {task.dept}
-                      </span>
-                      <span className="font-mono text-xs text-slate-400">{task.id}</span>
-                    </div>
-                    <p className="text-sm font-semibold text-slate-700 mt-1">{task.activity}</p>
-                    <p className="text-xs text-slate-400">{task.notes}</p>
-                  </div>
-                  <div className="text-right flex-shrink-0">
-                    <span className="text-xs font-mono text-slate-500">{task.section}</span>
-                    <div
-                      className="mt-1 text-xs font-bold px-2 py-0.5 rounded"
-                      style={{
-                        background: task.priority === 'Critical' ? '#FEE2E2' : '#FED7AA',
-                        color: task.priority === 'Critical' ? '#DC2626' : '#C2410C',
-                      }}
+                  <div className="flex items-center justify-between">
+                    <span
+                      className={`text-[9px] font-bold px-1.5 py-0.5 rounded font-mono ${
+                        c.severity === 'HIGH'
+                          ? 'bg-red-100 text-red-700'
+                          : c.severity === 'MEDIUM'
+                          ? 'bg-amber-100 text-amber-700'
+                          : 'bg-yellow-100 text-yellow-700'
+                      }`}
                     >
-                      {task.priority}
-                    </div>
+                      {c.severity}
+                    </span>
+                    <span className="text-[10px] font-mono text-slate-400 font-bold">{c.section}</span>
                   </div>
+                  <p className="text-xs font-bold text-slate-800 line-clamp-1">{c.title}</p>
+                  <p className="text-[11px] text-slate-500 line-clamp-2 leading-tight">{c.description}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Coordination Opportunity */}
+          {/* Coordination Opportunity Banner */}
           <div
-            className="rounded-xl border-2 p-4 flex items-start gap-4"
-            style={{ borderColor: SAFFRON + '80', background: SAFFRON + '08' }}
+            className="rounded-2xl border-2 p-3.5 sm:p-4 flex flex-col sm:flex-row items-start gap-3 sm:gap-4"
+            style={{ borderColor: SAFFRON + '60', background: SAFFRON + '08' }}
           >
-            <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: SAFFRON }}>
-              <Users size={18} className="text-white" />
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: SAFFRON }}>
+              <Users size={20} className="text-white" />
             </div>
             <div>
-              <h4 className="font-semibold" style={{ color: NAVY }}>
-                Coordination Opportunity Detected
+              <h4 className="font-bold text-sm" style={{ color: NAVY }}>
+                Cross-Department Coordination Opportunity Identified
               </h4>
-              <p className="text-sm text-slate-600 mt-1">
-                3 maintenance activities in the A–B section can potentially be performed within one common block,
-                reducing total block requirement from{' '}
-                <span className="font-semibold text-red-600">7.5 hrs</span> to{' '}
-                <span className="font-semibold" style={{ color: GREEN }}>
-                  2.5 hrs
-                </span>
-                .
+              <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                3 maintenance activities in the <span className="font-bold font-mono">A–B</span> section (Track, Signal & Traction) have been aligned within a single common block window, reducing total corridor possession requirement from{' '}
+                <span className="font-bold text-red-600">6.0 hours</span> to{' '}
+                <span className="font-bold text-emerald-700">2.5 hours</span>.
               </p>
             </div>
           </div>
 
-          {/* Recommended Block */}
+          {/* MAIN AI RECOMMENDATION CARD: BLOCK B014 */}
           <div
-            className="bg-white rounded-xl border-2 shadow-sm overflow-hidden"
+            className="bg-white rounded-2xl border-2 shadow-sm overflow-hidden"
             style={{ borderColor: b014Approved ? GREEN : NAVY }}
           >
-            <div className="px-5 py-3" style={{ background: b014Approved ? GREEN : NAVY }}>
-              <div className="flex items-center gap-2">
-                <Zap size={15} className="text-white" />
-                <span className="text-white font-semibold text-sm">
-                  {b014Approved ? 'BLOCK B014 APPROVED' : 'AI RECOMMENDED BLOCK'}
+            {/* Banner */}
+            <div
+              className="px-4 sm:px-6 py-3.5 flex items-center justify-between flex-wrap gap-2"
+              style={{ background: b014Approved ? GREEN : NAVY }}
+            >
+              <div className="flex items-center gap-2.5">
+                <Zap size={16} className="text-amber-300" />
+                <span className="text-white font-bold text-sm tracking-wide">
+                  {b014Approved
+                    ? 'BLOCK B014 — APPROVED BY PLANNER'
+                    : b014Rejected
+                    ? 'BLOCK B014 — REJECTED'
+                    : 'AI RECOMMENDATION: BLOCK B014 (SCORE: 94/100)'}
                 </span>
               </div>
+              <span className="text-xs font-bold font-mono text-white/90 bg-white/15 px-3 py-1 rounded-full">
+                AI Score: 94 / 100
+              </span>
             </div>
-            <div className="p-5">
-              <div className="grid grid-cols-2 gap-6">
+
+            <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Left: Metadata */}
                 <div>
-                  <div className="flex items-baseline gap-3 mb-3">
-                    <span className="text-3xl font-bold font-mono" style={{ color: NAVY }}>
+                  <div className="flex items-baseline gap-3 mb-2">
+                    <span className="text-2xl sm:text-3xl font-extrabold font-mono" style={{ color: NAVY }}>
                       B014
                     </span>
-                    <span className="text-slate-400 text-sm">A–B Section</span>
+                    <span className="text-slate-500 text-xs sm:text-sm font-semibold">Section A–B (Central Division)</span>
                   </div>
-                  {[
-                    { icon: Clock, label: '22:00 – 00:30', sub: '18 September 2026' },
-                    { icon: Train, label: 'Low Train Impact', sub: '2 trains rescheduled' },
-                    { icon: Users, label: '3 Departments', sub: 'Eng · S&T · Traction' },
-                  ].map(({ icon: Icon, label, sub }) => (
-                    <div key={label} className="flex items-center gap-3 mb-2">
-                      <div
-                        className="w-7 h-7 rounded-lg flex items-center justify-center"
-                        style={{ background: NAVY + '12' }}
-                      >
-                        <Icon size={13} style={{ color: NAVY }} />
+
+                  <div className="space-y-3 mt-4">
+                    <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100 min-h-[44px]">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-100 text-blue-800 flex-shrink-0">
+                        <Clock size={16} />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-slate-700">{label}</p>
-                        <p className="text-xs text-slate-400">{sub}</p>
+                        <p className="text-xs font-bold text-slate-800 font-mono">22:00 – 00:30 (150 minutes)</p>
+                        <p className="text-[11px] text-slate-400">Execution Date: 18 September 2026</p>
                       </div>
                     </div>
-                  ))}
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
-                    AI Reasoning
-                  </p>
-                  {[
-                    { label: 'Maintenance Priority', value: 'Critical' },
-                    { label: 'Asset Criticality', value: 'High' },
-                    { label: 'Train Impact', value: 'Low' },
-                    { label: 'Window Quality', value: 'Optimal' },
-                    { label: 'Dept Coordination', value: '3 Departments' },
-                  ].map((m) => (
-                    <div key={m.label} className="flex justify-between py-1 border-b border-slate-50 text-xs">
-                      <span className="text-slate-500">{m.label}</span>
-                      <span className="font-semibold" style={{ color: NAVY }}>
-                        {m.value}
-                      </span>
+
+                    <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100 min-h-[44px]">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-emerald-100 text-emerald-800 flex-shrink-0">
+                        <Train size={16} />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-800">Low Train Impact (2 Freight Re-scheduled)</p>
+                        <p className="text-[11px] text-slate-400">Zero express passenger disruptions</p>
+                      </div>
                     </div>
-                  ))}
+
+                    <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100 min-h-[44px]">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-amber-100 text-amber-800 flex-shrink-0">
+                        <Users size={16} />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-800">3 Coordinated Departments</p>
+                        <p className="text-[11px] text-slate-400">Engineering · Signal & Telecom · Traction</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right: AI Reasoning */}
+                <div className="flex flex-col justify-between">
+                  <div>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2.5">
+                      Decision-Support Reasoning
+                    </p>
+                    <div className="space-y-2">
+                      {[
+                        'Critical maintenance requirement: rail fracture at KM 46.2 resolved',
+                        'Multiple compatible maintenance activities unified under one possession',
+                        'Same railway corridor section (A–B Down Line)',
+                        'Optimal night maintenance window (22:00–00:30)',
+                        'Low expected train impact: freight paths regulated safely',
+                        'Reduced number of separate traffic blocks (3.5 hours saved)',
+                      ].map((reason, idx) => (
+                        <div key={idx} className="flex items-start gap-2 text-xs text-slate-700">
+                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-600 mt-1.5 flex-shrink-0" />
+                          <span>{reason}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mt-4 p-3 rounded-xl bg-slate-50 border border-slate-200 text-[11px] text-slate-500 italic">
+                    AI recommendation is decision-support advisory. The authorized Railway Planner retains final authority to Approve, Modify, or Reject this plan.
+                  </div>
                 </div>
               </div>
 
-              {/* Advisory note */}
-              <div className="mt-4 p-3 rounded-lg bg-slate-50 border border-slate-100 text-xs text-slate-500 italic">
-                AI recommendation is advisory. The authorized Railway Planner retains final authority to Approve,
-                Modify, or Reject this plan.
+              {/* Card Actions */}
+              <div className="pt-4 border-t border-slate-100 flex items-center justify-between flex-wrap gap-3">
+                {b014Approved && (
+                  <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-emerald-700">
+                    <ShieldCheck size={18} className="flex-shrink-0" />
+                    <span>Block B014 is officially approved and active in the schedule.</span>
+                  </div>
+                )}
+
+                <button
+                  onClick={() => setViewAlts(!viewAlts)}
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs font-bold border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors sm:ml-auto cursor-pointer min-h-[44px] flex items-center justify-center"
+                >
+                  {viewAlts ? 'Hide Alternative Windows' : 'View Alternative Windows'}
+                </button>
               </div>
 
-              {!b014Approved && (
-                <div className="flex gap-3 mt-4">
-                  <button
-                    onClick={onApprove}
-                    className="flex-1 py-2.5 rounded-lg text-white font-semibold text-sm hover:opacity-90 transition-opacity"
-                    style={{ background: GREEN }}
-                  >
-                    Approve Plan
-                  </button>
-                  <button
-                    onClick={() => setScreen('planner')}
-                    className="flex-1 py-2.5 rounded-lg font-semibold text-sm border-2 hover:bg-slate-50 transition-colors"
-                    style={{ borderColor: NAVY, color: NAVY }}
-                  >
-                    Modify Plan
-                  </button>
-                  <button
-                    onClick={() => setViewAlts(!viewAlts)}
-                    className="flex-1 py-2.5 rounded-lg font-semibold text-sm border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
-                  >
-                    View Alternatives
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Alternative Slots */}
-            {viewAlts && (
-              <div className="border-t border-slate-100 p-5">
-                <h4 className="text-sm font-semibold mb-3" style={{ color: NAVY }}>
-                  Alternative Block Windows
-                </h4>
-                <div className="space-y-2">
+              {/* Alternative Slots Dropdown */}
+              {viewAlts && (
+                <div className="pt-4 border-t border-slate-100 space-y-2 animate-in fade-in duration-150">
+                  <h4 className="text-xs font-bold text-slate-700 mb-2">Evaluated Window Slots (Corridor Simulation)</h4>
                   {alternativeSlots.map((slot) => (
                     <div
                       key={slot.label + slot.time}
-                      className={`flex items-center justify-between rounded-lg p-3 border text-sm ${slot.note.includes('★') ? 'border-saffron-300' : 'border-slate-100'}`}
-                      style={{
-                        background: slot.note.includes('★') ? SAFFRON + '10' : '#F8FAFC',
-                        borderColor: slot.note.includes('★') ? SAFFRON : '#E2E8F0',
-                      }}
+                      className={`flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl border text-xs gap-2 sm:gap-3 ${
+                        slot.note.includes('★') ? 'bg-amber-50/60 border-amber-200' : 'bg-slate-50 border-slate-200'
+                      }`}
                     >
-                      <div>
-                        <span className="font-medium text-slate-700">{slot.label}</span>
-                        <span className="mx-2 text-slate-300">|</span>
-                        <span className="font-mono text-xs" style={{ color: NAVY }}>
-                          {slot.time}
-                        </span>
+                      <div className="flex items-center gap-3">
+                        <span className="font-bold text-slate-800">{slot.label}</span>
+                        <span className="text-slate-300">|</span>
+                        <span className="font-mono font-bold text-slate-700">{slot.time}</span>
                       </div>
                       <div className="flex items-center gap-3">
                         <span
-                          className="text-xs font-medium px-2 py-0.5 rounded-full"
-                          style={{
-                            background: slot.impact === 'Low' ? GREEN + '15' : '#FED7AA',
-                            color: slot.impact === 'Low' ? GREEN : '#C2410C',
-                          }}
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                            slot.impact === 'Low' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                          }`}
                         >
                           {slot.impact} Impact
                         </span>
-                        <span className="text-xs text-slate-400">{slot.note}</span>
+                        <span className="text-slate-500 font-medium text-[11px]">{slot.note}</span>
                       </div>
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -1,6 +1,13 @@
-import type { MaintenanceRequest, Block } from '../types';
+import type {
+  MaintenanceRequest,
+  Block,
+  NotificationItem,
+  ActivityItem,
+  DataSourceItem,
+  ConflictItem,
+} from '../types';
 
-export const requests: MaintenanceRequest[] = [
+export const initialRequests: MaintenanceRequest[] = [
   {
     id: 'BR-1024',
     department: 'Engineering',
@@ -21,6 +28,9 @@ export const requests: MaintenanceRequest[] = [
     resources: ['Track Machine TMC-7', '25 Gang Staff', 'Welding Set'],
     description:
       'Urgent repair of rail fracture at KM 46.2. Fracture length approximately 12 cm on the Down line. Gang and equipment deployed on standby pending block.',
+    createdBy: 'P. Singh (Field Engineer)',
+    createdAt: '15 Sep 2026, 09:15',
+    history: ['Request submitted by P. Singh', 'Flagged as Safety Critical by TMS alert', 'AI Priority set to CRITICAL'],
   },
   {
     id: 'BR-1025',
@@ -42,6 +52,9 @@ export const requests: MaintenanceRequest[] = [
     resources: ['S&T Gang (4 staff)', 'Signal Testing Equipment'],
     description:
       'Inspection and rectification of intermittent relay failures in signal SM-42. Compatible with Engineering block in A–B section.',
+    createdBy: 'A. Kumar (Supervisor)',
+    createdAt: '16 Sep 2026, 11:30',
+    history: ['Request submitted by A. Kumar', 'SMMS sensor alert attached', 'AI Section match found with BR-1024'],
   },
   {
     id: 'BR-1026',
@@ -62,6 +75,9 @@ export const requests: MaintenanceRequest[] = [
     resources: ['OHE Trolley', 'TRD Gang (6 staff)'],
     description:
       'Scheduled OHE stagger, height, and tension measurement. Can be coordinated with Engineering block. Requires power block from TSS.',
+    createdBy: 'M. Verma (TRD In-Charge)',
+    createdAt: '16 Sep 2026, 14:00',
+    history: ['Request submitted by M. Verma', 'Power shutoff clearance requested from TSS'],
   },
   {
     id: 'BR-1027',
@@ -81,6 +97,9 @@ export const requests: MaintenanceRequest[] = [
     location: 'KM 78.0 to KM 82.0, B–C Section',
     resources: ['Tamping Machine BCM-2', '20 Gang Staff'],
     description: 'Ballast tamping to rectify track geometry defects. Speed restriction of 50 kmph in effect at KM 79.5.',
+    createdBy: 'P. Singh (Field Engineer)',
+    createdAt: '17 Sep 2026, 08:45',
+    history: ['Request submitted by P. Singh', 'Speed restriction logged at 50 kmph'],
   },
   {
     id: 'BR-1028',
@@ -102,6 +121,9 @@ export const requests: MaintenanceRequest[] = [
     resources: ['Cable Locator', 'S&T Gang (6 staff)'],
     description:
       'Urgent repair of underground signal cable fault. Section currently working on telephone working. Risk of total block failure.',
+    createdBy: 'A. Kumar (Supervisor)',
+    createdAt: '13 Sep 2026, 16:20',
+    history: ['Request submitted by A. Kumar', 'Paper block working warning issued'],
   },
   {
     id: 'BR-1029',
@@ -122,10 +144,13 @@ export const requests: MaintenanceRequest[] = [
     resources: ['Bridge Inspection Team (4 staff)'],
     description:
       'Scheduled biannual inspection of ROB at KM 112.4. Visual inspection of piers, bearings, and superstructure.',
+    createdBy: 'K. Patel (Bridge Inspector)',
+    createdAt: '17 Sep 2026, 10:15',
+    history: ['Request submitted by K. Patel'],
   },
 ];
 
-export const blocks: Block[] = [
+export const initialBlocks: Block[] = [
   {
     id: 'B014',
     section: 'A–B',
@@ -136,6 +161,21 @@ export const blocks: Block[] = [
     departments: ['Engineering', 'Signal & Telecom', 'Traction'],
     activities: 3,
     status: 'ai-recommended',
+    trainImpact: 'Low',
+    aiScore: 94,
+    reasoning: [
+      'Critical maintenance requirement (Rail Fracture at KM 46.2)',
+      'Multiple compatible maintenance activities identified',
+      'Same railway section (A–B Corridor)',
+      'Suitable low-density night maintenance window (22:00–00:30)',
+      'Low expected train impact (only 2 freight movements regulated)',
+      'Reduced number of separate blocks (saved 5.0 hours)',
+    ],
+    activitiesList: [
+      'Engineering: Track Repair — Rail Fracture (BR-1024)',
+      'Signal & Telecom: Signal Inspection & Testing (BR-1025)',
+      'Traction: OHE Inspection (BR-1026)',
+    ],
   },
   {
     id: 'B015',
@@ -147,6 +187,10 @@ export const blocks: Block[] = [
     departments: ['Engineering'],
     activities: 1,
     status: 'planned',
+    trainImpact: 'Low',
+    aiScore: 88,
+    reasoning: ['Scheduled Ballast Tamping', 'Night window avoids Express slots'],
+    activitiesList: ['Engineering: Ballast Tamping (BR-1027)'],
   },
   {
     id: 'B013',
@@ -158,6 +202,9 @@ export const blocks: Block[] = [
     departments: ['Signal & Telecom'],
     activities: 1,
     status: 'completed',
+    trainImpact: 'Medium',
+    aiScore: 82,
+    activitiesList: ['Signal & Telecom: Preliminary Cable Inspection'],
   },
   {
     id: 'B011',
@@ -169,6 +216,9 @@ export const blocks: Block[] = [
     departments: ['Engineering'],
     activities: 1,
     status: 'completed',
+    trainImpact: 'Low',
+    aiScore: 91,
+    activitiesList: ['Engineering: Routine Fastener Replacement'],
   },
   {
     id: 'B016',
@@ -180,8 +230,150 @@ export const blocks: Block[] = [
     departments: ['Engineering'],
     activities: 1,
     status: 'planned',
+    trainImpact: 'Low',
+    aiScore: 85,
+    activitiesList: ['Engineering: Bridge Inspection (BR-1029)'],
   },
 ];
+
+export const initialNotifications: NotificationItem[] = [
+  {
+    id: 'NOTIF-1',
+    title: 'AI Block Recommendation Ready',
+    message: 'Coordinated Block B014 (A–B Section) generated with score 94/100.',
+    timestamp: '10 min ago',
+    type: 'info',
+    read: false,
+    linkScreen: 'planning',
+  },
+  {
+    id: 'NOTIF-2',
+    title: 'Critical Maintenance Alert',
+    message: 'BR-1024 (Rail Fracture KM 46.2) is overdue by 3 days. Priority escalated.',
+    timestamp: '35 min ago',
+    type: 'warning',
+    read: false,
+    linkScreen: 'requests',
+  },
+  {
+    id: 'NOTIF-3',
+    title: 'TMS Corridor Sync',
+    message: 'Train movement schedules synchronized for Central Division.',
+    timestamp: '1 hr ago',
+    type: 'success',
+    read: true,
+    linkScreen: 'datasources',
+  },
+];
+
+export const initialActivities: ActivityItem[] = [
+  {
+    id: 'ACT-1',
+    action: 'AI Plan Generated',
+    user: 'TrackSync AI Engine',
+    timestamp: '18 Sep 2026, 08:30',
+    relatedItem: 'Block B014',
+    details: 'Coordinated 3 activities across Engineering, S&T, and Traction.',
+  },
+  {
+    id: 'ACT-2',
+    action: 'Request Created',
+    user: 'P. Singh (Field Engineer)',
+    timestamp: '17 Sep 2026, 08:45',
+    relatedItem: 'BR-1027',
+    details: 'Ballast Tamping on B–C section submitted.',
+  },
+  {
+    id: 'ACT-3',
+    action: 'Data Source Synced',
+    user: 'System Automated Job',
+    timestamp: '17 Sep 2026, 07:00',
+    relatedItem: 'TMS & SMMS',
+    details: 'Synchronized 21,073 records from division feed.',
+  },
+  {
+    id: 'ACT-4',
+    action: 'Block Completed',
+    user: 'R. K. Sharma (Planner)',
+    timestamp: '16 Sep 2026, 23:59',
+    relatedItem: 'Block B011',
+    details: 'Fastener replacement completed within 120 minutes.',
+  },
+];
+
+export const initialDataSources: DataSourceItem[] = [
+  {
+    id: 'TMS',
+    name: 'Train Management System',
+    description: 'Train schedules, movements, and traffic data',
+    status: 'connected',
+    lastSync: '2 min ago',
+    records: '14,832',
+    health: 98,
+  },
+  {
+    id: 'SMMS',
+    name: 'Signal & Maintenance Management',
+    description: 'Signal asset health and maintenance history',
+    status: 'connected',
+    lastSync: '5 min ago',
+    records: '6,241',
+    health: 95,
+  },
+  {
+    id: 'TDMS',
+    name: 'Traction Distribution Management',
+    description: 'OHE and power supply system data',
+    status: 'connected',
+    lastSync: '8 min ago',
+    records: '3,890',
+    health: 92,
+  },
+  {
+    id: 'COA',
+    name: 'Central Operations Analytics',
+    description: 'Division-level performance and block utilization analytics',
+    status: 'connected',
+    lastSync: '12 min ago',
+    records: '28,410',
+    health: 88,
+  },
+];
+
+export const initialConflicts: ConflictItem[] = [
+  {
+    id: 'CONF-1',
+    section: 'A–B',
+    severity: 'HIGH',
+    title: 'Express Train Movement Overlap',
+    description: 'Train 12842 Coromandel Express is scheduled through A–B during the initial 21:00 window.',
+    trainAffected: '12842 Coromandel Express (Up)',
+    resolution: 'Shifted proposed block start from 21:00 to 22:00, clearing the high-speed passenger path.',
+  },
+  {
+    id: 'CONF-2',
+    section: 'A–B',
+    severity: 'MEDIUM',
+    title: 'Simultaneous Track & OHE Power Shutoff Requirement',
+    description: 'Engineering track welder requires OHE traction power to be isolated at TSS-4.',
+    trainAffected: 'N/A (Departmental Conflict)',
+    resolution: 'Unified S&T inspection and TRD power block under joint supervisory protocol.',
+  },
+  {
+    id: 'CONF-3',
+    section: 'C–D',
+    severity: 'LOW',
+    title: 'Speed Restriction Buffer',
+    description: 'Existing 30 kmph restriction requires additional train clearance head-time.',
+    trainAffected: 'Freight BCN-HL',
+    resolution: 'Incorporated 15-minute headway margin in simulation.',
+  },
+];
+
+// Re-export requests and blocks as backward compatibility aliases
+export const requests = initialRequests;
+export const blocks = initialBlocks;
+export const dataSources = initialDataSources;
 
 export const analyticsData = {
   before: { blocks: 12, blockHours: 28, conflicts: 9 },
@@ -215,43 +407,4 @@ export const conflictTrend = [
   { month: 'Jul', conflicts: 8 },
   { month: 'Aug', conflicts: 7 },
   { month: 'Sep', conflicts: 3 },
-];
-
-export const dataSources = [
-  {
-    id: 'TMS',
-    name: 'Train Management System',
-    description: 'Train schedules, movements, and traffic data',
-    status: 'connected' as const,
-    lastSync: '2 min ago',
-    records: '14,832',
-    health: 98,
-  },
-  {
-    id: 'SMMS',
-    name: 'Signal & Maintenance Management',
-    description: 'Signal asset health and maintenance history',
-    status: 'connected' as const,
-    lastSync: '5 min ago',
-    records: '6,241',
-    health: 95,
-  },
-  {
-    id: 'TDMS',
-    name: 'Traction Distribution Management',
-    description: 'OHE and power supply system data',
-    status: 'connected' as const,
-    lastSync: '8 min ago',
-    records: '3,890',
-    health: 92,
-  },
-  {
-    id: 'COA',
-    name: 'Central Operations Analytics',
-    description: 'Division-level performance and block utilization analytics',
-    status: 'syncing' as const,
-    lastSync: '12 min ago',
-    records: '28,410',
-    health: 88,
-  },
 ];

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Shield, Eye, EyeOff, ChevronLeft, Train, Lock } from 'lucide-react';
+import { Shield, Eye, EyeOff, ChevronLeft, Train, Lock, Sparkles } from 'lucide-react';
+import { useApp } from '../context/AppContext';
 
 const NAVY = '#123B66';
 const DEEP = '#0B2545';
@@ -7,56 +8,67 @@ const BLUE = '#1769AA';
 const SAFFRON = '#F28C28';
 const GREEN = '#138A4B';
 
-const roles = [
-  { id: 'planner', label: 'Block Planner', initial: 'RK', name: 'R. K. Sharma' },
-  { id: 'supervisor', label: 'Maintenance Supervisor', initial: 'AK', name: 'A. Kumar' },
-  { id: 'engineer', label: 'Field Engineer', initial: 'PS', name: 'P. Singh' },
+const suggestionChips = [
+  { id: 'PLN001', role: 'Block Planner' },
+  { id: 'ABC123', role: 'Chief Controller' },
+  { id: 'Rahul', role: 'Maintenance Supervisor' },
+  { id: 'IR-2026-9', role: 'Field Engineer' },
 ];
 
 interface Props {
-  onSuccess: (role: string) => void;
+  onSuccess: (role: string, employeeId: string) => void;
   onBack: () => void;
 }
 
 export default function LoginPage({ onSuccess, onBack }: Props) {
+  const { login } = useApp();
   const [employeeId, setEmployeeId] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
-  const [remember, setRemember] = useState(false);
-  const [selectedRole, setSelectedRole] = useState('planner');
+  const [remember, setRemember] = useState(true);
+  const [selectedRole, setSelectedRole] = useState('Block Planner');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleRoleSelect = (roleId: string) => {
-    setSelectedRole(roleId);
-    if (!employeeId) setEmployeeId('IR-2024-8841');
-    if (!password) setPassword('••••••••');
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const empId = employeeId.trim() || 'IR-2024-8841';
+
+    if (!employeeId.trim()) {
+      setError('Please enter your Employee ID (any value accepted).');
+      return;
+    }
+    if (!password.trim()) {
+      setError('Please enter your password (any value accepted).');
+      return;
+    }
+
     setError('');
     setLoading(true);
+
     setTimeout(() => {
       setLoading(false);
-      const role = roles.find((r) => r.id === selectedRole);
-      onSuccess(role?.label || 'Block Planner');
-    }, 1200);
+      const trimmedId = employeeId.trim();
+      login(trimmedId, password, selectedRole);
+      onSuccess(selectedRole, trimmedId);
+    }, 700);
+  };
+
+  const handleChipClick = (id: string, role: string) => {
+    setEmployeeId(id);
+    setPassword('demo123');
+    setSelectedRole(role);
+    setError('');
   };
 
   return (
-    <div
-      className="min-h-screen flex flex-col"
-      style={{ background: '#F7F9FC' }}
-    >
+    <div className="min-h-screen flex flex-col" style={{ background: '#F7F9FC' }}>
       {/* Header */}
-      <header className="border-b border-slate-200 bg-white px-6 h-14 flex items-center gap-4">
+      <header className="border-b border-slate-200 bg-white px-4 sm:px-6 h-14 flex items-center gap-4">
         <button
           onClick={onBack}
-          className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors"
+          className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors p-2 -ml-2 min-h-[44px]"
         >
-          <ChevronLeft size={16} />
+          <ChevronLeft size={18} />
           Back
         </button>
         <div className="flex items-center gap-2 ml-2">
@@ -73,10 +85,10 @@ export default function LoginPage({ onSuccess, onBack }: Props) {
       </header>
 
       {/* Content */}
-      <div className="flex-1 flex items-center justify-center px-4 py-10">
+      <div className="flex-1 flex items-center justify-center px-3.5 sm:px-4 py-6 sm:py-8">
         <div className="w-full max-w-sm">
           {/* Card */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-md overflow-hidden">
             {/* Top stripe */}
             <div className="h-1 flex">
               <div className="flex-1" style={{ background: SAFFRON }} />
@@ -84,11 +96,11 @@ export default function LoginPage({ onSuccess, onBack }: Props) {
               <div className="flex-1" style={{ background: GREEN }} />
             </div>
 
-            <div className="p-8">
+            <div className="p-5 sm:p-7">
               {/* Brand */}
-              <div className="text-center mb-7">
+              <div className="text-center mb-6">
                 <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-sm"
+                  className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3 shadow-sm"
                   style={{ background: `linear-gradient(135deg, ${DEEP}, ${BLUE})` }}
                 >
                   <Train size={22} className="text-white" />
@@ -96,50 +108,26 @@ export default function LoginPage({ onSuccess, onBack }: Props) {
                 <p className="font-black text-xl tracking-widest" style={{ color: NAVY }}>
                   TRACKSYNC
                 </p>
-                <p className="text-slate-700 font-semibold text-base mt-1">Welcome back</p>
+                <p className="text-slate-700 font-semibold text-base mt-1">Simulated Portal Sign-In</p>
                 <p className="text-slate-400 text-xs mt-1">
-                  Sign in to continue to your railway operations workspace.
+                  Type <span className="font-semibold text-slate-600">any Employee ID</span> & password to log in.
                 </p>
               </div>
 
-              {/* Demo role switcher */}
-              <div className="mb-6">
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                  Demo Account
+              {/* Quick suggestions chips */}
+              <div className="mb-5">
+                <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+                  <Sparkles size={11} className="text-blue-500" /> Quick fill suggestions:
                 </p>
-                <div className="space-y-1.5">
-                  {roles.map((r) => (
+                <div className="flex flex-wrap gap-1.5">
+                  {suggestionChips.map((chip) => (
                     <button
-                      key={r.id}
+                      key={chip.id}
                       type="button"
-                      onClick={() => handleRoleSelect(r.id)}
-                      className="w-full flex items-center gap-3 p-2.5 rounded-xl border transition-all text-left"
-                      style={
-                        selectedRole === r.id
-                          ? { borderColor: BLUE, background: BLUE + '08' }
-                          : { borderColor: '#E2E8F0', background: '#FAFAFA' }
-                      }
+                      onClick={() => handleChipClick(chip.id, chip.role)}
+                      className="text-[11px] px-2.5 py-1 rounded-lg border border-slate-200 bg-slate-50 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 text-slate-600 font-mono transition-colors"
                     >
-                      <div
-                        className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
-                        style={{ background: selectedRole === r.id ? NAVY : '#94A3B8' }}
-                      >
-                        {r.initial}
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold" style={{ color: selectedRole === r.id ? NAVY : '#374151' }}>
-                          {r.name}
-                        </p>
-                        <p className="text-[10px] text-slate-400">{r.label}</p>
-                      </div>
-                      {selectedRole === r.id && (
-                        <div
-                          className="ml-auto w-4 h-4 rounded-full flex items-center justify-center"
-                          style={{ background: BLUE }}
-                        >
-                          <div className="w-1.5 h-1.5 rounded-full bg-white" />
-                        </div>
-                      )}
+                      {chip.id}
                     </button>
                   ))}
                 </div>
@@ -149,17 +137,18 @@ export default function LoginPage({ onSuccess, onBack }: Props) {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1.5">
-                    Employee ID
+                    Employee ID / Name
                   </label>
                   <input
                     type="text"
                     value={employeeId}
                     onChange={(e) => setEmployeeId(e.target.value)}
-                    placeholder="e.g. IR-2024-8841"
-                    className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-blue-400 focus:bg-white transition-colors"
+                    placeholder="e.g. PLN001, ABC123, Rahul"
+                    className="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-blue-400 focus:bg-white transition-colors font-medium"
                     autoComplete="username"
                   />
                 </div>
+
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1.5">
                     Password
@@ -169,8 +158,8 @@ export default function LoginPage({ onSuccess, onBack }: Props) {
                       type={showPass ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="w-full px-4 py-2.5 pr-10 text-sm border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-blue-400 focus:bg-white transition-colors"
+                      placeholder="Any password"
+                      className="w-full px-3.5 py-2.5 pr-10 text-sm border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-blue-400 focus:bg-white transition-colors"
                       autoComplete="current-password"
                     />
                     <button
@@ -183,23 +172,39 @@ export default function LoginPage({ onSuccess, onBack }: Props) {
                   </div>
                 </div>
 
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+                    Operational Role
+                  </label>
+                  <select
+                    value={selectedRole}
+                    onChange={(e) => setSelectedRole(e.target.value)}
+                    className="w-full px-3.5 py-2.5 sm:py-2 text-sm sm:text-xs border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-blue-400 text-slate-700 font-medium"
+                  >
+                    <option value="Block Planner">Block Planner (Central Division)</option>
+                    <option value="Maintenance Supervisor">Maintenance Supervisor (S&T / Engg)</option>
+                    <option value="Field Engineer">Field Engineer (Permanent Way)</option>
+                    <option value="Traction Controller">Traction Power Controller (TRD)</option>
+                  </select>
+                </div>
+
                 <div className="flex items-center justify-between">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={remember}
                       onChange={(e) => setRemember(e.target.checked)}
-                      className="rounded border-slate-300"
+                      className="rounded border-slate-300 text-blue-600"
                     />
-                    <span className="text-xs text-slate-500">Remember this device</span>
+                    <span className="text-xs text-slate-500">Remember session</span>
                   </label>
-                  <button type="button" className="text-xs hover:underline" style={{ color: BLUE }}>
-                    Need help signing in?
-                  </button>
+                  <span className="text-xs text-blue-600 cursor-default">
+                    Simulated auth
+                  </span>
                 </div>
 
                 {error && (
-                  <p className="text-xs text-red-600 text-center bg-red-50 py-2 rounded-lg border border-red-100">
+                  <p className="text-xs text-red-600 text-center bg-red-50 py-2 px-3 rounded-lg border border-red-100">
                     {error}
                   </p>
                 )}
@@ -207,16 +212,16 @@ export default function LoginPage({ onSuccess, onBack }: Props) {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3 rounded-xl font-bold text-sm text-white hover:opacity-90 transition-opacity disabled:opacity-70 shadow-sm"
+                  className="w-full py-3 rounded-xl font-bold text-sm text-white hover:opacity-95 transition-all disabled:opacity-70 shadow-sm cursor-pointer"
                   style={{ background: `linear-gradient(135deg, ${DEEP}, ${BLUE})` }}
                 >
                   {loading ? (
                     <span className="flex items-center justify-center gap-2">
                       <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      Signing in…
+                      Initializing TrackSync Session…
                     </span>
                   ) : (
-                    'Sign In'
+                    'Enter TrackSync'
                   )}
                 </button>
               </form>
@@ -224,18 +229,18 @@ export default function LoginPage({ onSuccess, onBack }: Props) {
 
             {/* Security footer */}
             <div
-              className="border-t border-slate-100 px-6 py-3 flex items-center justify-center gap-2"
+              className="border-t border-slate-100 px-6 py-2.5 flex items-center justify-center gap-2"
               style={{ background: '#FAFBFC' }}
             >
               <Lock size={11} className="text-slate-400" />
               <span className="text-[10px] text-slate-400 font-medium">
-                Authorized railway personnel only
+                Prototype demonstration · No backend credentials required
               </span>
             </div>
           </div>
 
-          <p className="text-center text-[10px] text-slate-400 mt-4">
-            Prototype — Illustrative scenario. Not connected to IR systems.
+          <p className="text-center text-[10px] text-slate-400 mt-3">
+            Smart India Hackathon Prototype · TrackSync Railway Coordination
           </p>
         </div>
       </div>

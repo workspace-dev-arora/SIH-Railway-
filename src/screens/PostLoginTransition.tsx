@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
+import { useApp } from '../context/AppContext';
 
-const NAVY  = '#123B66';
-const DEEP  = '#0B2545';
-const BLUE  = '#1769AA';
+const NAVY = '#123B66';
+const DEEP = '#0B2545';
+const BLUE = '#1769AA';
 const SAFFRON = '#F28C28';
-const GREEN   = '#138A4B';
+const GREEN = '#138A4B';
 
 interface Props {
   role: string;
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export default function PostLoginTransition({ role, onComplete }: Props) {
+  const { user } = useApp();
   const [line1, setLine1] = useState(false);
   const [line2, setLine2] = useState(false);
   const [trainPos, setTrainPos] = useState(0);
@@ -19,8 +21,8 @@ export default function PostLoginTransition({ role, onComplete }: Props) {
 
   useEffect(() => {
     const t0 = setTimeout(() => setLine1(true), 200);
-    const t1 = setTimeout(() => setLine2(true), 900);
-    const t2 = setTimeout(() => setTrackVisible(true), 1400);
+    const t1 = setTimeout(() => setLine2(true), 750);
+    const t2 = setTimeout(() => setTrackVisible(true), 1200);
 
     // Animate train across
     let pos = 0;
@@ -34,7 +36,7 @@ export default function PostLoginTransition({ role, onComplete }: Props) {
           setTimeout(onComplete, 200);
         }
       }, 16);
-    }, 1500);
+    }, 1250);
 
     return () => {
       [t0, t1, t2, t3].forEach(clearTimeout);
@@ -42,7 +44,7 @@ export default function PostLoginTransition({ role, onComplete }: Props) {
     };
   }, [onComplete]);
 
-  const plannerName = role === 'Block Planner' ? 'Planner' : role.split(' ').pop() ?? role;
+  const displayName = user?.name || user?.employeeId || (role === 'Block Planner' ? 'Planner' : role);
 
   return (
     <div
@@ -70,26 +72,26 @@ export default function PostLoginTransition({ role, onComplete }: Props) {
       </div>
 
       {/* Text */}
-      <div className="text-center space-y-3 mb-10">
+      <div className="text-center space-y-3 mb-10 px-4">
         <p
-          className="text-2xl font-bold transition-all duration-500"
+          className="text-2xl sm:text-3xl font-bold transition-all duration-500"
           style={{
             color: NAVY,
             opacity: line1 ? 1 : 0,
             transform: line1 ? 'translateY(0)' : 'translateY(8px)',
           }}
         >
-          Welcome back, {plannerName}.
+          Welcome back, {displayName}.
         </p>
         <p
-          className="text-base font-normal transition-all duration-500"
+          className="text-sm sm:text-base font-normal transition-all duration-500"
           style={{
             color: '#64748B',
             opacity: line2 ? 1 : 0,
             transform: line2 ? 'translateY(0)' : 'translateY(8px)',
           }}
         >
-          Today's railway operations overview is ready.
+          Central Division railway operations & maintenance schedule is live.
         </p>
       </div>
 
@@ -100,7 +102,7 @@ export default function PostLoginTransition({ role, onComplete }: Props) {
       >
         {/* Stations */}
         <div className="flex items-center justify-between">
-          {['A', 'B', 'C', 'D'].map((s, i) => (
+          {['A', 'B', 'C', 'D'].map((s) => (
             <div key={s} className="flex flex-col items-center gap-1 z-10 relative">
               <div
                 className="w-2.5 h-2.5 rounded-full bg-white border-2"
