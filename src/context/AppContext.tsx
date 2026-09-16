@@ -12,6 +12,7 @@ import type {
   Severity,
   Department,
   AIPriority,
+  RailwayDivision,
 } from '../types';
 import {
   initialRequests,
@@ -98,6 +99,10 @@ interface AppContextValue {
   showToast: (message: string, type?: 'success' | 'warning' | 'info' | 'error') => void;
   dismissToast: (id: string) => void;
 
+  // Active Division
+  division: RailwayDivision;
+  setDivision: (d: RailwayDivision) => void;
+
   // Navigation & Modals UI state
   screen: Screen;
   setScreen: (s: Screen) => void;
@@ -124,6 +129,16 @@ interface AppContextValue {
 const AppContext = createContext<AppContextValue | undefined>(undefined);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
+  // ── Active Division State ───────────────────────────────────────
+  const [division, setDivisionState] = useState<RailwayDivision>(() =>
+    loadFromStorage<RailwayDivision>(STORAGE_KEYS.DIVISION, 'Central Division')
+  );
+
+  const setDivision = (d: RailwayDivision) => {
+    setDivisionState(d);
+    saveToStorage(STORAGE_KEYS.DIVISION, d);
+  };
+
   // ── Auth State ──────────────────────────────────────────────────
   const [user, setUser] = useState<UserProfile | null>(() =>
     loadFromStorage<UserProfile | null>(STORAGE_KEYS.USER, null)
@@ -605,6 +620,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setIsBlockModifyOpen,
     isEditRequestOpen,
     setIsEditRequestOpen,
+    division,
+    setDivision,
     metrics,
     resetDemoData,
   };

@@ -8,6 +8,7 @@ export type Screen =
   | 'datasources';
 
 export type Department = 'Engineering' | 'Signal & Telecom' | 'Traction';
+export type RailwayDivision = 'Central Division' | 'Northern Division' | 'Western Division' | 'Southern Division' | 'Eastern Division';
 export type Severity = 'Critical' | 'High' | 'Medium' | 'Low';
 export type ReqStatus = 'Pending' | 'Approved' | 'In Progress' | 'Completed' | 'Rejected';
 export type AIPriority = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';

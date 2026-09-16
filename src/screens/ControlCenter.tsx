@@ -35,6 +35,7 @@ export default function ControlCenter() {
     setSelectedRequest,
     setIsBlockModifyOpen,
     setSelectedBlockId,
+    division,
   } = useApp();
 
   const b014 = blocks.find((b) => b.id === 'B014');
@@ -135,7 +136,7 @@ export default function ControlCenter() {
             Good Day, {user?.name || user?.employeeId || 'Planner'}
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5 leading-snug">
-            Maintenance & Corridor Operations Overview — Central Division · Thursday, 18 September 2026
+            Maintenance & Corridor Operations Overview — {division} · Thursday, 18 September 2026
           </p>
         </div>
 
@@ -388,7 +389,7 @@ export default function ControlCenter() {
       <div className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-200 shadow-sm">
         <div className="flex items-center justify-between flex-wrap gap-2 mb-4 sm:mb-5">
           <div>
-            <h3 className="text-sm font-bold" style={{ color: NAVY }}>Corridor Track Status — Central Division</h3>
+            <h3 className="text-sm font-bold" style={{ color: NAVY }}>Corridor Track Status — {division}</h3>
             <p className="text-xs text-slate-400 mt-0.5">Real-time track block occupancy across stations A to E</p>
           </div>
           <button

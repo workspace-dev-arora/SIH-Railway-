@@ -19,7 +19,7 @@ import {
   Menu,
   X,
 } from 'lucide-react';
-import type { Screen } from './types';
+import type { Screen, RailwayDivision } from './types';
 import { AppProvider, useApp } from './context/AppContext';
 import { loadFromStorage, saveToStorage, STORAGE_KEYS } from './utils/storage';
 
@@ -73,6 +73,8 @@ function MainAppShell() {
     setIsNotificationsOpen,
     setIsActivityLogOpen,
     setIsResetDialogOpen,
+    division,
+    setDivision,
   } = useApp();
 
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
@@ -418,9 +420,19 @@ function MainAppShell() {
             </h2>
           </div>
 
-          <div className="hidden sm:flex items-center gap-2 text-xs font-semibold border border-slate-200 rounded-xl px-3 py-1.5 bg-slate-50 text-slate-700">
-            <span>Central Division</span>
-            <ChevronDown size={13} className="text-slate-400" />
+          <div className="hidden sm:relative sm:block">
+            <select
+              value={division}
+              onChange={(e) => setDivision(e.target.value as RailwayDivision)}
+              className="appearance-none bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200 rounded-xl pl-3 pr-8 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer transition-all shadow-xs"
+            >
+              <option value="Central Division">Central Division</option>
+              <option value="Northern Division">Northern Division</option>
+              <option value="Western Division">Western Division</option>
+              <option value="Southern Division">Southern Division</option>
+              <option value="Eastern Division">Eastern Division</option>
+            </select>
+            <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
           </div>
 
           <span className="hidden md:block text-xs font-mono font-medium text-slate-500 whitespace-nowrap bg-slate-100 px-3 py-1.5 rounded-xl">

@@ -16,6 +16,7 @@ export const STORAGE_KEYS = {
   DATA_SOURCES: 'tracksync_data_sources',
   RECOMMENDATION: 'tracksync_recommendation',
   APP_PHASE: 'tracksync_auth_phase',
+  DIVISION: 'tracksync_active_division',
 } as const;
 
 export function loadFromStorage<T>(key: string, fallback: T): T {

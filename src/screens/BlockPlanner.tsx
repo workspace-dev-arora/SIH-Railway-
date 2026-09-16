@@ -53,11 +53,12 @@ export default function BlockPlanner() {
     selectedBlockId,
     setSelectedBlockId,
     setIsBlockModifyOpen,
+    division,
+    setDivision,
   } = useApp();
 
   const [date, setDate] = useState('2026-09-18');
   const [section, setSection] = useState('All');
-  const [division, setDivision] = useState('Central Division');
   const [selectedDept, setSelectedDept] = useState('All');
 
   const selectedBlock = blocks.find((b) => b.id === selectedBlockId) || blocks[0];
@@ -112,11 +113,14 @@ export default function BlockPlanner() {
               <label className="text-slate-400 font-semibold text-[11px]">Division:</label>
               <select
                 value={division}
-                onChange={(e) => setDivision(e.target.value)}
+                onChange={(e) => setDivision(e.target.value as any)}
                 className="bg-transparent focus:outline-none text-slate-700 font-medium"
               >
                 <option value="Central Division">Central Division</option>
                 <option value="Northern Division">Northern Division</option>
+                <option value="Western Division">Western Division</option>
+                <option value="Southern Division">Southern Division</option>
+                <option value="Eastern Division">Eastern Division</option>
               </select>
             </div>
 
